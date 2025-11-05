@@ -1,14 +1,10 @@
 import streamlit as st
 import requests
-import os
 
 st.title("AI Chatbot via n8n Webhook")
 
-# Benutzerinput
 user_input = st.text_input("Schreib etwas:")
 
-# Webhook URL aus den Streamlit Secrets holen
-# In Streamlit Cloud: Secrets > "webhook_url"
 webhook_url = st.secrets["webhook_url"]
 
 if user_input:
@@ -18,7 +14,10 @@ if user_input:
         response = requests.post(webhook_url, json=payload)
         response.raise_for_status()  # Fehler falls Status != 200
 
-        bot_reply = response.json().get("reply", "Keine Antwort erhalten.")
+        data = response.json()  # JSON-Antwort parsen
+
+        # Da n8n ein Array zurückgibt, holen wir das erste Element und dann das "output"-Feld
+        bot_reply = data[0].get("output", "Keine Antwort erhalten.") if isinstance(data, list) else "Keine Antwort erhalten."
         st.write(bot_reply)
 
     except requests.exceptions.RequestException as e:
